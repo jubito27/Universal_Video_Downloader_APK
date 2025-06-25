@@ -41,7 +41,8 @@ jobs:
 
     - name: Symlink libtinfo5 to libtinfo6 (for backward compatibility)
       run: |
-        sudo ln -s /usr/lib/x86_64-linux-gnu/libtinfo.so.6 /usr/lib/x86_64-linux-gnu/libtinfo.so.5 || true
+        sudo ln -sf /usr/lib/x86_64-linux-gnu/libtinfo.so.6 /usr/lib/x86_64-linux-gnu/libtinfo.so.5 || true
+        ls -l /usr/lib/x86_64-linux-gnu/libtinfo.so.*
 
         
 
