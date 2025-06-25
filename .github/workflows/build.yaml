@@ -36,8 +36,10 @@ jobs:
         sudo apt-get install -y \
           autoconf automake libtool pkg-config m4 \
           libltdl-dev libtool-bin \
-          zlib1g-dev libncurses5-dev libtinfo5 libssl-dev libffi-dev \
+          zlib1g-dev libncurses5-dev libssl-dev libffi-dev \
           git unzip openjdk-17-jdk
+        wget http://archive.ubuntu.com/ubuntu/pool/main/n/ncurses/libtinfo5_6.2-0ubuntu2_amd64.deb
+        sudo dpkg -i libtinfo5_6.2-0ubuntu2_amd64.deb || true
 
     - name: Set up Android SDK
       run: |
