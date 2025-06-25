@@ -38,6 +38,11 @@ jobs:
           libltdl-dev libtool-bin \
           zlib1g-dev libncurses5-dev libtinfo6 libssl-dev libffi-dev \
           git unzip openjdk-17-jdk
+
+    - name: Symlink libtinfo5 to libtinfo6 (for backward compatibility)
+      run: |
+        sudo ln -s /usr/lib/x86_64-linux-gnu/libtinfo.so.6 /usr/lib/x86_64-linux-gnu/libtinfo.so.5 || true
+
         
 
     - name: Set up Android SDK
