@@ -36,7 +36,7 @@ jobs:
         sudo apt-get install -y \
           autoconf automake libtool pkg-config m4 \
           libltdl-dev libtool-bin \
-          zlib1g-dev libncurses5-dev libssl-dev libffi-dev \
+          zlib1g-dev libncurses5-dev libtinfo5 libssl-dev libffi-dev \
           git unzip openjdk-17-jdk
 
     - name: Set up Android SDK
