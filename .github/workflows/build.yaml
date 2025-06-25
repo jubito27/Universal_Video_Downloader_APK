@@ -36,8 +36,14 @@ jobs:
         sudo apt-get install -y \
           autoconf automake libtool pkg-config m4 \
           libltdl-dev libtool-bin \
-          zlib1g-dev libncurses5-dev libtinfo6 libssl-dev libffi-dev \
+          zlib1g-dev libncurses5-dev libssl-dev libffi-dev \
           git unzip openjdk-17-jdk
+
+    - name: Manually install libtinfo5
+      run: |
+        wget https://archive.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.1_amd64.deb
+        sudo dpkg -i libtinfo5_6.3-2ubuntu0.1_amd64.deb
+
 
     - name: Symlink libtinfo5 to libtinfo6 (for backward compatibility)
       run: |
