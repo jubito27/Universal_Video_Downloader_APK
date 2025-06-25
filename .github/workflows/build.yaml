@@ -102,6 +102,12 @@ jobs:
 
     - name: Decode Keystore
       run: |
+          if [ -z "${{ secrets.KEYSTORE_BASE64 }}" ]; then
+            echo "Secret is empty"
+            exit 1
+          else
+            echo "Secret is set"
+          fi
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystore/my-release-key.jks
 
     - name: Build Release APK
