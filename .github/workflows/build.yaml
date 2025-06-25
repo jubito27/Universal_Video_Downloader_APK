@@ -133,7 +133,7 @@ jobs:
       run: |
         APK_PATH=$(find ./bin -name "*-release-unsigned.apk" | head -n 1)
         jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
-          -keystore android.jks \
+          -keystore keystore/my-release-key.jks \
           -storepass "${{ secrets.KEYSTORE_PASSWORD }}" \
           -keypass "${{ secrets.KEY_PASSWORD }}" \
           "$APK_PATH" "${{ secrets.KEY_ALIAS }}"
