@@ -102,7 +102,7 @@ jobs:
 
     - name: Decode Keystore
       run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > my-release-key.jks
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystore/my-release-key.jks
 
     - name: Build Release APK
       uses: digreatbrian/buildozer-action@v2
