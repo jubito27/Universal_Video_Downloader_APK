@@ -123,6 +123,9 @@ jobs:
           fi
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystore/my-release-key.jks
 
+    - name: 🔍 Debug - Check APK files
+      run: ls -l bin/
+
     - name: Build Release APK
       uses: digreatbrian/buildozer-action@v2
       with:
@@ -142,17 +145,8 @@ jobs:
       run: |
         APK_PATH=$(find ./bin -name "*-release-unsigned.apk" | head -n 1)
         NEW_APK_PATH="${APK_PATH/-unsigned/-signed}"
+        echo "Renaming to $NEW_APK_PATH"
         mv "$APK_PATH" "$NEW_APK_PATH"
-
-          
-    - name: List bin directory contents
-      run: ls -l bin/
-    
-    - name: Move generated APK to known location (if exists)
-      run: |
-        if ls bin/*release-signed.apk 1> /dev/null 2>&1; then
-          mv bin/*release-signed.apk app-signed.apk
-        fi
 
 
     - name: Upload Signed APK Artifact
@@ -160,6 +154,7 @@ jobs:
       with:
         name: signed-release-apk
         path: ./bin/*-release-signed.apk
+        if-no-files-found: error
         
 
         
