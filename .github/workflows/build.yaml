@@ -123,14 +123,23 @@ jobs:
           fi
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystore/my-release-key.jks
 
-    - name: 🔍 Debug - Check APK files
-      run: ls -l bin/
+    
 
     - name: Build Release APK
       uses: digreatbrian/buildozer-action@v2
       with:
         python-version: 3.11
         buildozer-cmd: buildozer -v android release
+
+    - name: 🔍 Debug - Check APK files
+      run: |
+        if [ -d bin ]; then
+          ls -l bin/
+        else
+          echo "❌ APK build failed. 'bin/' folder does not exist."
+          echo "Please check the Buildozer logs above for exact errors."
+          exit 1
+        fi
     
     - name: Sign the APK manually
       run: |
