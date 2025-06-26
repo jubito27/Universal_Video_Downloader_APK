@@ -25,7 +25,7 @@ android.sdk_path = /home/runner/android-sdk
 android.ndk_path = /home/runner/android-sdk/ndk/25.2.9519653
 
 # ✅ Release signing (ensure your keystore is present or set this via GitHub Secrets)
-android.release_keystore = keystore file/my-release-key.jks
+android.release_keystore = keystore/my-release-key.jks
 android.release_store_password = spass@123
 android.release_key_alias = key_alias
 android.release_key_password = pass@123
