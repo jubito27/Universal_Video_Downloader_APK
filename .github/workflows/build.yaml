@@ -121,7 +121,7 @@ jobs:
           else
             echo "Secret is set"
           fi
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystore/my-release-key.jks
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystore file/my-release-key.jks
 
     - name: Build Release APK
       uses: digreatbrian/buildozer-action@v2
