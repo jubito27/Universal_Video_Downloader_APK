@@ -30,3 +30,6 @@ A sleek, cross-platform app built with **KivyMD** that saves videos directly to 
 ```bash
 pip install -r requirements.txt
 python main.py
+
+## ** Download the app **
+sha256:c88870a06ef6e21dc508fe4acbd27e59205bb88f4b9de4efd151558e3f4a337a
