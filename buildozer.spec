@@ -6,7 +6,7 @@ source.dir = .
 source.include_exts = py,png,jpg,kv,atlas
 version = 1.0
 orientation = portrait
-icon = appicon.png
+#icon = appicon.png
 # (Python deps)
 requirements = python3,kivy==2.2.1,kivymd,yt-dlp,pyrogram,tgcrypto,requests,android,libffi
 android.permissions = INTERNET,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE,MANAGE_EXTERNAL_STORAGE
@@ -14,9 +14,9 @@ android.permissions = INTERNET,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE,MANA
 # (for Telegram video downloads and web browsing)
 android.use_fork = False
 android.allow_backup = True
-android.minapi = 21
+android.minapi = 29
 android.ndk = 23b
-android.api = 33
+android.api = 29
 android.release_artifact = apk  
 android.archs = armeabi-v7a, arm64-v8a
 android.gradle_dependencies = com.android.support:appcompat-v7:28.0.0
