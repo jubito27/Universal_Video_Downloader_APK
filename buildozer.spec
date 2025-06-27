@@ -14,9 +14,9 @@ android.permissions = INTERNET,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE,MANA
 # (for Telegram video downloads and web browsing)
 android.use_fork = False
 android.allow_backup = True
-android.minapi = 29
+android.minapi = 21
 android.ndk = 23b
-android.api = 29
+android.api = 33
 android.release_artifact = apk  
 android.archs = armeabi-v7a, arm64-v8a
 android.gradle_dependencies = com.android.support:appcompat-v7:28.0.0
