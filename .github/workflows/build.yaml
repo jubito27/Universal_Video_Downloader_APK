@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     timeout-minutes: 30
 
     steps:
@@ -39,16 +39,6 @@ jobs:
           zlib1g-dev libncurses5-dev libssl-dev libffi-dev \
           git unzip openjdk-17-jdk
 
-    - name: Manually install libtinfo5
-      run: |
-        wget https://archive.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.1_amd64.deb
-        sudo dpkg -i libtinfo5_6.3-2ubuntu0.1_amd64.deb
-
-    - name: Symlink libtinfo5 to libtinfo6
-      run: |
-        sudo ln -sf /usr/lib/x86_64-linux-gnu/libtinfo.so.6 /usr/lib/x86_64-linux-gnu/libtinfo.so.5 || true
-        ls -l /usr/lib/x86_64-linux-gnu/libtinfo.so.*
-
     - name: Set up Android SDK
       run: |
         mkdir -p $HOME/android-sdk/cmdline-tools
@@ -63,13 +53,15 @@ jobs:
         echo "$HOME/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
 
     - name: Accept Android licenses
-      run: yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
+      run: |
+        yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
 
     - name: Install Android components
       run: |
         $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager \
           "platform-tools" \
           "platforms;android-33" \
+          "platforms;android-34" \
           "build-tools;34.0.0" \
           "ndk;25.2.9519653"
         echo "$HOME/android-sdk/build-tools/34.0.0" >> $GITHUB_PATH
@@ -80,11 +72,16 @@ jobs:
         ln -sf $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager $HOME/android-sdk/tools/bin/sdkmanager
         ln -sf $HOME/android-sdk/cmdline-tools/latest/bin/avdmanager $HOME/android-sdk/tools/bin/avdmanager
 
-    - name: Install Buildozer
+    - name: Install Buildozer (latest)
       run: |
         pip install --upgrade pip
         pip install cython==0.29.33
         pip install git+https://github.com/kivy/buildozer.git
+
+    - name: Update buildozer.spec paths
+      run: |
+        sed -i "s|^android.sdk_path = .*|android.sdk_path = $HOME/android-sdk|g" buildozer.spec
+        echo "android.ndk_path = $HOME/android-sdk/ndk/25.2.9519653" >> buildozer.spec
 
     - name: Configure buildozer.spec
       run: |
@@ -92,46 +89,39 @@ jobs:
         sed -i "/^android.ndk_path =/d" buildozer.spec
         echo "android.ndk_path = $HOME/android-sdk/ndk/25.2.9519653" >> buildozer.spec
         sed -i "s|#p4a.branch = .*|p4a.branch = develop|g" buildozer.spec
+        grep -q "^android.ndk_path" buildozer.spec || echo "android.ndk_path = $HOME/android-sdk/ndk/25.2.9519653" >> buildozer.spec
 
     - name: Prepare Autotools Environment
       run: |
-        cd ~/.buildozer/android/platform/python-for-android || true
+        cd ~/.buildozer/android/platform/python-for-android  || true
         if [ -d "recipes/libffi" ]; then
           cd recipes/libffi
           libtoolize --force --copy
           autoreconf --install --force --verbose
         fi
 
-    - name: Decode Keystore
+    - name: Build APK
       run: |
-        mkdir -p keystore
-        echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystore/my-release-key.jks
+        buildozer -v android debug
+    
 
-    - name: Build Release APK
-      uses: digreatbrian/buildozer-action@v2
-      with:
-        python-version: 3.11
-        buildozer-cmd: buildozer -v android release
-
-    - name: Align APK with zipalign
+    - name: List bin directory contents
+      run: ls -l bin/
+    
+    - name: Move generated APK to known location (if exists)
       run: |
-        APK_PATH=$(find ./bin -name "*-release-unsigned.apk" | head -n 1)
-        zipalign -v -p 4 "$APK_PATH" bin/aligned-release.apk
-
-    - name: Sign the APK
-      run: |
-        jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
-          -keystore keystore/my-release-key.jks \
-          -storepass "${{ secrets.KEYSTORE_PASSWORD }}" \
-          -keypass "${{ secrets.KEY_PASSWORD }}" \
-          bin/aligned-release.apk "${{ secrets.KEY_ALIAS }}"
-
-    - name: Rename the final APK
-      run: mv bin/aligned-release.apk bin/universalvideodownloader-1.0-signed.apk
-
-    - name: Upload Signed APK Artifact
+        if ls bin/*release-unsigned.apk 1> /dev/null 2>&1; then
+          mv bin/*release-unsigned.apk app-unsigned.apk
+        fi
+    
+    - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: signed-release-apk
-        path: bin/universalvideodownloader-1.0-signed.apk
-        if-no-files-found: error
+        name: APK
+        path: |
+          app-unsigned.apk
+          bin/*.apk
+        if-no-files-found: warn
+        
+
+        
