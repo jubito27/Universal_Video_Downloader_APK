@@ -44,13 +44,10 @@ jobs:
         wget https://archive.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.1_amd64.deb
         sudo dpkg -i libtinfo5_6.3-2ubuntu0.1_amd64.deb
 
-
-    - name: Symlink libtinfo5 to libtinfo6 (for backward compatibility)
+    - name: Symlink libtinfo5 to libtinfo6
       run: |
         sudo ln -sf /usr/lib/x86_64-linux-gnu/libtinfo.so.6 /usr/lib/x86_64-linux-gnu/libtinfo.so.5 || true
         ls -l /usr/lib/x86_64-linux-gnu/libtinfo.so.*
-
-        
 
     - name: Set up Android SDK
       run: |
@@ -66,15 +63,13 @@ jobs:
         echo "$HOME/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
 
     - name: Accept Android licenses
-      run: |
-        yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
+      run: yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
 
     - name: Install Android components
       run: |
         $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager \
           "platform-tools" \
           "platforms;android-33" \
-          "platforms;android-34" \
           "build-tools;34.0.0" \
           "ndk;25.2.9519653"
         echo "$HOME/android-sdk/build-tools/34.0.0" >> $GITHUB_PATH
@@ -85,16 +80,11 @@ jobs:
         ln -sf $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager $HOME/android-sdk/tools/bin/sdkmanager
         ln -sf $HOME/android-sdk/cmdline-tools/latest/bin/avdmanager $HOME/android-sdk/tools/bin/avdmanager
 
-    - name: Install Buildozer (latest)
+    - name: Install Buildozer
       run: |
         pip install --upgrade pip
         pip install cython==0.29.33
         pip install git+https://github.com/kivy/buildozer.git
-
-    - name: Update buildozer.spec paths
-      run: |
-        sed -i "s|^android.sdk_path = .*|android.sdk_path = $HOME/android-sdk|g" buildozer.spec
-        echo "android.ndk_path = $HOME/android-sdk/ndk/25.2.9519653" >> buildozer.spec
 
     - name: Configure buildozer.spec
       run: |
@@ -102,11 +92,10 @@ jobs:
         sed -i "/^android.ndk_path =/d" buildozer.spec
         echo "android.ndk_path = $HOME/android-sdk/ndk/25.2.9519653" >> buildozer.spec
         sed -i "s|#p4a.branch = .*|p4a.branch = develop|g" buildozer.spec
-        grep -q "^android.ndk_path" buildozer.spec || echo "android.ndk_path = $HOME/android-sdk/ndk/25.2.9519653" >> buildozer.spec
 
     - name: Prepare Autotools Environment
       run: |
-        cd ~/.buildozer/android/platform/python-for-android  || true
+        cd ~/.buildozer/android/platform/python-for-android || true
         if [ -d "recipes/libffi" ]; then
           cd recipes/libffi
           libtoolize --force --copy
@@ -115,15 +104,8 @@ jobs:
 
     - name: Decode Keystore
       run: |
-          if [ -z "${{ secrets.KEYSTORE_BASE64 }}" ]; then
-            echo "Secret is empty"
-            exit 1
-          else
-            echo "Secret is set"
-          fi
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystore/my-release-key.jks
-
-    
+        mkdir -p keystore
+        echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystore/my-release-key.jks
 
     - name: Build Release APK
       uses: digreatbrian/buildozer-action@v2
@@ -131,39 +113,25 @@ jobs:
         python-version: 3.11
         buildozer-cmd: buildozer -v android release
 
-    - name: 🔍 Debug - Check APK files
-      run: |
-        if [ -d bin ]; then
-          ls -l bin/
-        else
-          echo "❌ APK build failed. 'bin/' folder does not exist."
-          echo "Please check the Buildozer logs above for exact errors."
-          exit 1
-        fi
-    
-    - name: Sign the APK manually
+    - name: Align APK with zipalign
       run: |
         APK_PATH=$(find ./bin -name "*-release-unsigned.apk" | head -n 1)
+        zipalign -v -p 4 "$APK_PATH" bin/aligned-release.apk
+
+    - name: Sign the APK
+      run: |
         jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
           -keystore keystore/my-release-key.jks \
           -storepass "${{ secrets.KEYSTORE_PASSWORD }}" \
           -keypass "${{ secrets.KEY_PASSWORD }}" \
-          "$APK_PATH" "${{ secrets.KEY_ALIAS }}"
+          bin/aligned-release.apk "${{ secrets.KEY_ALIAS }}"
 
-    - name: Rename the signed APK
-      run: |
-        APK_PATH=$(find ./bin -name "*-release-unsigned.apk" | head -n 1)
-        NEW_APK_PATH="${APK_PATH/-unsigned/-signed}"
-        echo "Renaming to $NEW_APK_PATH"
-        mv "$APK_PATH" "$NEW_APK_PATH"
-
+    - name: Rename the final APK
+      run: mv bin/aligned-release.apk bin/universalvideodownloader-1.0-signed.apk
 
     - name: Upload Signed APK Artifact
       uses: actions/upload-artifact@v4
       with:
         name: signed-release-apk
-        path: ./bin/*-release-signed.apk
+        path: bin/universalvideodownloader-1.0-signed.apk
         if-no-files-found: error
-        
-
-        
